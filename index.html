@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tebak Kucing!</title>
+  <style>
+    * { box-sizing: border-box; font-family: 'Verdana', sans-serif; }
+    body {
+      margin: 0; padding: 0;
+      background: #f7f7f7;
+      display: flex; justify-content: center; align-items: center;
+      height: 100vh; overflow: hidden;
+    }
+    .container { text-align: center; padding: 20px; position: relative; }
+    .hidden { display: none; }
+    .box-area {
+      display: flex; justify-content: center; gap: 20px; margin-top: 30px;
+    }
+    .box {
+      width: 80px; height: 80px; font-size: 40px;
+      display: flex; align-items: center; justify-content: center;
+      border: 2px solid #333; border-radius: 10px;
+      cursor: pointer; background-color: #fff;
+      transition: transform 0.2s;
+    }
+    .box:hover { transform: scale(1.1); }
+    .spin-area {
+      display: flex; justify-content: center; flex-wrap: wrap;
+      gap: 10px; margin: 20px 0;
+    }
+    .reward {
+      padding: 10px 15px; border-radius: 10px;
+      font-size: 14px; background-color: #eee;
+      border: 1px solid #ccc;
+      transition: background-color 0.3s, transform 0.3s;
+    }
+    .highlight {
+      background-color: #ffdd57 !important;
+      font-weight: bold; transform: scale(1.1);
+    }
+    .btn {
+      padding: 10px 15px; margin: 10px;
+      border: none; border-radius: 8px;
+      cursor: pointer; background-color: #2e86de;
+      color: white;
+    }
+    .btn:hover { background-color: #145ccf; }
+    .roasting-btn {
+      background-color: red !important; color: white;
+      position: relative;
+    }
+    .followed-btn {
+      background-color: green !important;
+      color: white;
+      position: relative;
+    }
+    .followed-btn small {
+      font-size: 10px;
+      color: #fff;
+      display: block;
+      margin-top: 2px;
+    }
+    .falling-emote {
+      position: fixed;
+      font-size: 24px;
+      animation: fall 5s linear infinite;
+      pointer-events: none;
+      z-index: 999;
+    }
+    @keyframes fall {
+      0% { top: -5%; opacity: 1; }
+      100% { top: 110%; opacity: 0; }
+    }
+    .note { font-size: 12px; color: gray; margin-top: 10px; }
+
+    .watermark {
+      position: absolute;
+      bottom: 5px;
+      right: 10px;
+      font-size: 10px;
+      color: #ccc;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="intro">
+      <h1>Tebak kotak yang berisi kucing Ardi 😹!</h1>
+      <p class="note">* Keberuntunganmu tergantung hubunganmu dengan Ardi</p>
+      <button class="btn" onclick="startGame()">Mulai</button>
+    </div>
+
+    <div id="game" class="hidden">
+      <h2>Pilih salah satu!</h2>
+      <div class="box-area">
+        <div class="box" onclick="pickBox(0)">📦</div>
+        <div class="box" onclick="pickBox(1)">📦</div>
+        <div class="box" onclick="pickBox(2)">📦</div>
+      </div>
+      <p id="roastText"></p>
+    </div>
+
+    <div id="reward" class="hidden">
+      <h2>Kamu dapat 1x kesempatan Spin hadiah acak dari Ardi 😎</h2>
+      <button class="btn" onclick="showSpinPage()">Lanjut</button>
+    </div>
+
+    <div id="spin1" class="hidden">
+      <h2>Spin buat liat hadiahnya!</h2>
+      <div class="spin-area" id="spinArea1">
+        <div class="reward">Puterin Padang bareng Ardi</div>
+        <div class="reward">Ditraktir Ardi makan</div>
+        <div class="reward">Duit 50k</div>
+        <div class="reward">Duit 100k</div>
+        <div class="reward">zonk</div>
+        <div class="reward">IG Ardi</div>
+      </div>
+      <p class="note">*SS dapat apa sebagai bukti!</p>
+      <button class="btn" id="spin1Btn" onclick="doFirstSpin()">Spin</button>
+    </div>
+
+    <div id="spin2" class="hidden">
+      <h2>Karena Ardi baik hati dan tidak sombong, kamu dapet 1x spin lagi!</h2>
+      <div class="spin-area" id="spinArea2">
+        <div class="reward">Puterin Padang bareng Ardi</div>
+        <div class="reward">Ditraktir Ardi makan</div>
+        <div class="reward">Duit 50k</div>
+        <div class="reward">Duit 100k</div>
+        <div class="reward">zonk</div>
+        <div class="reward">IG Ardi</div>
+      </div>
+      <p class="note">*SS dapat apa sebagai bukti!</p>
+      <button class="btn" id="spin2Btn" onclick="doSecondSpin()">Spin lagi</button>
+    </div>
+
+    <div id="finalChoice" class="hidden">
+      <h2>Selamat! kamu dapet IG Ardi 😂</h2>
+      <button class="btn" onclick="followIG()">Mau</button>
+      <button class="btn" onclick="followIG()">Mau banget</button>
+      <button class="btn roasting-btn" id="noBtn" onclick="handleNoClick()">Gak mau</button>
+      <button class="btn followed-btn" id="followedBtn" onclick="handleFollowed()">
+        Udah Follow<br><small>(+Bonus!)</small>
+      </button>
+    </div>
+
+    <div id="spinSpecial" class="hidden">
+      <h2>Spin spesial buat followers Ardi!</h2>
+      <div class="spin-area" id="spinAreaSpecial">
+        <div class="reward">Puterin Padang bareng Ardi</div>
+        <div class="reward">Ditraktir Ardi makan</div>
+        <div class="reward">Duit 50k</div>
+        <div class="reward">Duit 100k</div>
+        <div class="reward">zonk</div>
+        <div class="reward">IG Ardi</div>
+        <div class="reward">Minta 1 permintaan bebas (dalam batas wajar)</div>
+        <div class="reward">Dibayarin tiket nonton</div>
+      </div>
+      <p class="note">*SS dapat apa sebagai bukti!</p>
+      <p id="specialText"></p>
+      <button class="btn" id="spinSpecialBtn" onclick="doSpecialSpin()">Spin Sekarang</button>
+    </div>
+
+    <div class="watermark">Ardiansyah</div>
+  </div>
+
+  <script>
+    let attempt = 0;
+    let noClick = 0;
+    let followedClick = 0;
+    const roastFails = [
+      'Yah Ardi capek² bikin game, malah kamu pilih yang salah~ Coba lagi!',
+      'Kok yang dipilih ini sih? Coba lagi dong!',
+      'Bukan kucing njir! yg bener dong 😑.',
+      'Salah terus, Aku capek ya~',
+      'Gak gitu caranya main, pilih yang lain dong.'
+    ];
+
+    function startGame() {
+      document.getElementById('intro').classList.add('hidden');
+      document.getElementById('game').classList.remove('hidden');
+    }
+
+    function pickBox(index) {
+      const boxes = document.querySelectorAll('.box');
+      boxes.forEach(b => b.onclick = null);
+      let items = ['🐀', '💣', '🐈'];
+      items = shuffleArray(items);
+      boxes.forEach((box, i) => box.innerHTML = '📦');
+
+      if (attempt < 2) {
+        boxes[index].innerHTML = items.find(e => e !== '🐈');
+        document.getElementById('roastText').textContent = roastFails[attempt % roastFails.length];
+      } else {
+        boxes[index].innerHTML = '🐈';
+        document.getElementById('roastText').textContent = 'Oke akhirnya kamu bener, lanjut ya!';
+        setTimeout(() => {
+          document.getElementById('game').classList.add('hidden');
+          document.getElementById('reward').classList.remove('hidden');
+        }, 2000);
+      }
+      attempt++;
+      setTimeout(() => {
+        boxes.forEach(box => box.innerHTML = '📦');
+        boxes.forEach((box, i) => box.onclick = () => pickBox(i));
+        document.getElementById('roastText').textContent = '';
+      }, 2000);
+    }
+
+    function shuffleArray(array) {
+      return array.sort(() => Math.random() - 0.5);
+    }
+
+    function showSpinPage() {
+      document.getElementById('reward').classList.add('hidden');
+      document.getElementById('spin1').classList.remove('hidden');
+    }
+
+    function doFirstSpin() {
+      spinHighlight('#spinArea1 .reward', 4, 'spin1', 'spin2');
+    }
+
+    function doSecondSpin() {
+      spinHighlight('#spinArea2 .reward', 5, 'spin2', 'finalChoice');
+    }
+
+    function spinHighlight(selector, targetIndex, fromId, toId) {
+      const list = document.querySelectorAll(selector);
+      const btn = document.querySelector(`#${fromId}Btn`);
+      btn.style.display = 'none';
+      let i = 0;
+      const interval = setInterval(() => {
+        list.forEach(el => el.classList.remove('highlight'));
+        list[i % list.length].classList.add('highlight');
+        i++;
+        if (i > list.length * 3) {
+          clearInterval(interval);
+          list.forEach(el => el.classList.remove('highlight'));
+          list[targetIndex].classList.add('highlight');
+          setTimeout(() => {
+            document.getElementById(fromId).classList.add('hidden');
+            document.getElementById(toId).classList.remove('hidden');
+          }, 2000);
+        }
+      }, 150);
+    }
+
+    function handleNoClick() {
+      const btn = document.getElementById('noBtn');
+      const texts = [
+        'Yakin gak mau? Ardi sama kucing nya sedih~',
+        'Serius woi? jahat kali~',
+        'Duh jangan nolak dong, mau aja lah~',
+        'jangan dipencet teruss, tombolnya aja sampai kabur :('
+      ];
+      if (noClick < 4) {
+        btn.innerHTML = texts[noClick % texts.length];
+        moveBtn(btn);
+        noClick++;
+      } else {
+        followIG();
+      }
+    }
+
+    function moveBtn(btn) {
+      btn.style.position = 'absolute';
+      btn.style.top = Math.random() * 80 + '%';
+      btn.style.left = Math.random() * 80 + '%';
+    }
+
+    function followIG() {
+      window.location.href = 'https://instagram.com/_Ardiansyaah15';
+    }
+
+    function handleFollowed() {
+      const btn = document.getElementById('followedBtn');
+      if (followedClick === 0) {
+        btn.innerHTML = 'Eitss bener yah GK bohong??<br><small>(+Bonus Spin!)</small>';
+        moveBtn(btn);
+        followedClick++;
+      } else if (followedClick === 1) {
+        btn.innerHTML = 'Yaudah Free 1x Spin Spesial Followers Ardi 😀<br><small>(+Bonus Spin!)</small>';
+        btn.style.position = 'static';
+        followedClick++;
+      } else {
+        document.getElementById('finalChoice').classList.add('hidden');
+        document.getElementById('spinSpecial').classList.remove('hidden');
+      }
+    }
+
+    function doSpecialSpin() {
+      const list = document.querySelectorAll('#spinAreaSpecial .reward');
+      const btn = document.getElementById('spinSpecialBtn');
+      const text = document.getElementById('specialText');
+      btn.style.display = 'none';
+      let i = 0;
+      const interval = setInterval(() => {
+        list.forEach(el => el.classList.remove('highlight'));
+        list[i % list.length].classList.add('highlight');
+        i++;
+        if (i > list.length * 3) {
+          clearInterval(interval);
+          list.forEach(el => el.classList.remove('highlight'));
+          list[3].classList.add('highlight'); // 100k
+          setTimeout(() => {
+            list[3].classList.remove('highlight');
+            list[4].classList.add('highlight'); // zonk
+            setTimeout(() => {
+              text.innerText = 'Yahh anda belum beruntung 😔 coba lagi dilain kesempatan..';
+              dropLaughEmotes();
+            }, 1000);
+          }, 1000);
+        }
+      }, 150);
+    }
+
+    function dropLaughEmotes() {
+      const emotes = ['😂','😭','🤣','😹'];
+      setInterval(() => {
+        const emote = document.createElement('div');
+        emote.classList.add('falling-emote');
+        emote.style.left = Math.random() * 100 + '%';
+        emote.textContent = emotes[Math.floor(Math.random() * emotes.length)];
+        document.body.appendChild(emote);
+        setTimeout(() => emote.remove(), 5000);
+      }, 200);
+    }
+  </script>
+</body>
+</html>
